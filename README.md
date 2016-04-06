@@ -24,6 +24,7 @@ MemberCache:
 
           var b = o.Get<string>("dddd");
 WebCache:
+
     var o = CacheContainer.GetInstances<WebCacheProvider>(CacheTargetType.WebCache.ToString());
 
           o.Add("dddd","gggg",60);
@@ -36,3 +37,11 @@ WebCache:
 
           var b = o.Get<string>("dddd");
           
+支持异步添加，删除，获取
+
+     var o = CacheContainer.GetInstances<ICacheProvider>("ddlCache.Redis");
+          o.AddAsync("dddd", "gggg", 4444);
+          o.GetAsync<string>("dddd").Result;
+           o.RemoveAsync("dddd");
+           
+           DCLSystem拦截器集成
