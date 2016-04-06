@@ -47,13 +47,12 @@ WebCache:
            DCLSystem拦截器集成
 web.config
 
+
  <configSections>
- 
     <section name="cachingProvider" type="DCLSystem.Core.Caching.Configurations.CacheWrapperSection, DCLSystem.Core.Caching" requirePermission="false" />
-    
   </configSections>
-  
   <cachingProvider>
+  
     <bindings>
     
       <binding id="ddlCache" class="DCLSystem.Core.Caching.RedisCache.RedisContext,DCLSystem.Core.Caching">
