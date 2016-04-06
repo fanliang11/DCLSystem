@@ -48,10 +48,14 @@ WebCache:
 web.config
 
  <configSections>
+ 
     <section name="cachingProvider" type="DCLSystem.Core.Caching.Configurations.CacheWrapperSection, DCLSystem.Core.Caching" requirePermission="false" />
+    
   </configSections>
+  
   <cachingProvider>
     <bindings>
+    
       <binding id="ddlCache" class="DCLSystem.Core.Caching.RedisCache.RedisContext,DCLSystem.Core.Caching">
         <property name="appRuleFile" ref="rule"/>
         <property name="dataContextPool" value="ddls_sample">
