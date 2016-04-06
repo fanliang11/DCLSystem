@@ -45,3 +45,42 @@ WebCache:
            o.RemoveAsync("dddd");
            
            DCLSystem拦截器集成
+web.config
+
+ <configSections>
+    <section name="cachingProvider" type="DCLSystem.Core.Caching.Configurations.CacheWrapperSection, DCLSystem.Core.Caching" requirePermission="false" />
+  </configSections>
+  <cachingProvider>
+   
+    <bindings>
+      <binding id="ddlCache" class="DCLSystem.Core.Caching.RedisCache.RedisContext,DCLSystem.Core.Caching">
+        <property name="appRuleFile" ref="rule"/>
+        <property name="dataContextPool" value="ddls_sample">
+          <map name="Redis">
+            <property  value="127.0.0.1:6379::4"/>
+            
+          </map>
+          <map name="WebCache"></map>
+           <map name="CouchBase">
+             <property  value="fanly:12345@192.168.0.1:6379::pools"/>
+          </map>
+        </property>
+        <property name="defaultExpireTime" value="120"/>
+       <property name="connectTimeout" value="120"/>
+      </binding>
+         <binding id="testCache" class="DCLSystem.Core.Caching.RedisCache.RedisContext,DCLSystem.Core.Caching">
+        <property name="appRuleFile" ref="rule"/>
+        <property name="dataContextPool" value="ddls_sample">
+          <map name="Redis">
+            <property  value="127.0.0.1:6379::4"/>
+          </map>
+           <map name="CouchBase">
+            <property  value="fanly:12345@192.168.0.1:6379"/>
+            
+          </map>
+        </property>
+        <property name="defaultExpireTime" value="120"/>
+       <property name="connectTimeout" value="120"/>
+      </binding>
+    </bindings>
+  </cachingProvider>
