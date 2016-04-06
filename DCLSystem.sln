@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DCLSystem.Core", "DCLSystem.Core", "{8BF1368E-CDAB-4218-88C4-A239B48E1AB1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DCLSystem.Tests", "DCLSystem.Tests", "{731818A7-B8D7-4FFA-990D-891D1DFC31FC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DCLSystem.Core.Caching", "DCLSystem.Core\DCLSystem.Core.Caching\DCLSystem.Core.Caching.csproj", "{D6A26099-575C-48B8-A59B-41542FD3CD86}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DCLSystem.Tests.Caching", "DCLSystem.Tests\DCLSystem.Tests.Caching\DCLSystem.Tests.Caching.csproj", "{E5D6ACE3-4438-426F-B2D8-E90C6C7E25F3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D6A26099-575C-48B8-A59B-41542FD3CD86}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D6A26099-575C-48B8-A59B-41542FD3CD86}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D6A26099-575C-48B8-A59B-41542FD3CD86}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D6A26099-575C-48B8-A59B-41542FD3CD86}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E5D6ACE3-4438-426F-B2D8-E90C6C7E25F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E5D6ACE3-4438-426F-B2D8-E90C6C7E25F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E5D6ACE3-4438-426F-B2D8-E90C6C7E25F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E5D6ACE3-4438-426F-B2D8-E90C6C7E25F3}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{D6A26099-575C-48B8-A59B-41542FD3CD86} = {8BF1368E-CDAB-4218-88C4-A239B48E1AB1}
+		{E5D6ACE3-4438-426F-B2D8-E90C6C7E25F3} = {731818A7-B8D7-4FFA-990D-891D1DFC31FC}
+	EndGlobalSection
+	GlobalSection(SubversionScc) = preSolution
+		Svn-Managed = True
+		Manager = AnkhSVN - Subversion Support for Visual Studio
+	EndGlobalSection
+EndGlobal
