@@ -85,6 +85,7 @@
     <Compile Include="Configurations\MapCollection.cs" />
     <Compile Include="Configurations\ParameterElement.cs" />
     <Compile Include="Configurations\PropertyElement.cs" />
+    <Compile Include="CouchBaseCache\CouchBaseEndpoint.cs" />
     <Compile Include="CouchBaseCache\CouchBaseProvider.cs" />
     <Compile Include="HashAlgorithms\ConsistentHash.cs" />
     <Compile Include="HashAlgorithms\ConsistentHashNode.cs" />

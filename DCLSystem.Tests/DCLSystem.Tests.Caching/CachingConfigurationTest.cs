@@ -16,35 +16,47 @@ namespace DCLSystem.Tests.Caching
         [TestMethod]
         public void TestMethod1()
         {
-            var d = DateTime.Now;
+            //var d = DateTime.Now;
             var list = new List<Task<string>>();
-            for (var i = 0; i < 1000; i++)
+            var redisO = CacheContainer.GetInstances<ICacheProvider>("ddlCache.Redis");
+            for (var i = 0; i < 5000; i++)
             {
-                var o = CacheContainer.GetInstances<ICacheProvider>("ddlCache.Redis");
-              //  o.AddAsync("dddd", "gggg", 4444);
-                list.Add(o.GetAsync<string>("dddd"));
+                //   var o = CacheContainer.GetInstances<ICacheProvider>("ddlCache.Redis");
+                redisO.Add("dddd", "55", 333);
+                //    list.Add(o.GetAsync<string>("dddd"));
 
             }
-            var r = list.Select(p => p.Result).ToList();
-            var t = (DateTime.Now - d).TotalMilliseconds;
+            //     var r = list.Select(p => p.Result).ToList();
             var o1 = CacheContainer.GetInstances<ICacheProvider>("testCache.Redis");
+
+            var d = DateTime.Now;
             for (var i = 0; i < 1000; i++)
             {
-                var o = CacheContainer.GetInstances<ICacheProvider>("ddlCache.Redis");
-                //  o.AddAsync("dddd","gggg",4444);
-                list.Add(o.GetAsync<string>("dddd"));
 
+
+                var g = redisO.Get<string>("dddd");
+                // list.Add(o22.GetAsync<string>("dddd"));
             }
-            var r1 = list.Select(p => p.Result).ToList();
-            var o2 = CacheContainer.GetInstances<WebCacheProvider>(CacheTargetType.WebCache.ToString());
-            o2.Add("dggh2", "111");
+            //var r = list.Select(p => p.Result).ToList();
+            // var r1 = list.Select(p => p.Result).ToList();
+            var t = (DateTime.Now - d).TotalMilliseconds;
+            var webCacheO = CacheContainer.GetInstances<WebCacheProvider>(CacheTargetType.WebCache.ToString());
+            webCacheO.Add("dggh2", "111");
             o1.Add("3333", "33333", 4444);
 
-
+            var list2 = new List<Task<object>>();
+            var couchBase = CacheContainer.GetInstances<ICacheProvider>("ddlCache.CouchBase");
+            var couchtime = DateTime.Now;
+            for (var i = 0; i < 1000; i++)
+            {
+                var couchBase1 = CacheContainer.GetInstances<ICacheProvider>("ddlCache.CouchBase");
+                var g = couchBase1.Get<string>("dg1");
+            }
+            var couchbaseTime = (DateTime.Now - couchtime).TotalMilliseconds;
             var b1 = o1.Get<string>("3333");
             var pool = CacheContainer.GetInstances<RedisContext>("ddlCache").DataContextPool;
             var pool1 = CacheContainer.GetInstances<RedisContext>("ddlCache").DataContextPool;
-            var r3 = o2.GetAsync<string>("dggh2").Result;
+            var r3 = webCacheO.GetAsync<string>("dggh2").Result;
 
         }
     }

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Web;
 using System.Web.Caching;
 using DCLSystem.Core.Caching.RedisCache;
+using Microsoft.Practices.EnterpriseLibrary.Common.Utility;
 
 namespace DCLSystem.Core.Caching.NetCache
 {
@@ -67,7 +68,8 @@ namespace DCLSystem.Core.Caching.NetCache
         /// </remarks>
         public void Add(string key, object value)
         {
-            WebCache.Add(key, value, this.DefaultExpireTime);
+
+            WebCache.Add(GetKeySuffix(key), value, this.DefaultExpireTime);
         }
 
         /// <summary>
@@ -81,7 +83,7 @@ namespace DCLSystem.Core.Caching.NetCache
         /// </remarks>
         public void AddAsync(string key, object value)
         {
-            Task.Run(() => WebCache.Add(key, value, DefaultExpireTime));
+            Task.Run(() => WebCache.Add(GetKeySuffix(key), value, DefaultExpireTime));
         }
 
         /// <summary>
@@ -96,7 +98,7 @@ namespace DCLSystem.Core.Caching.NetCache
         /// </remarks>
         public void Add(string key, object value, bool flag)
         {
-            WebCache.Add(key, value, flag);
+            WebCache.Add(GetKeySuffix(key), value, flag);
         }
 
         /// <summary>
@@ -111,7 +113,7 @@ namespace DCLSystem.Core.Caching.NetCache
         /// </remarks>
         public void AddAsync(string key, object value, bool flag)
         {
-            Task.Run(() => WebCache.Add(key, value, flag));
+            Task.Run(() => WebCache.Add(GetKeySuffix(key), value, flag));
         }
 
         /// <summary>
@@ -126,7 +128,7 @@ namespace DCLSystem.Core.Caching.NetCache
         /// </remarks>
         public void Add(string key, object value, long numOfMinutes)
         {
-            WebCache.Add(key, value, null, DateTime.Now.AddMinutes((double) numOfMinutes), Cache.NoSlidingExpiration,
+            WebCache.Add(GetKeySuffix(key), value, null, DateTime.Now.AddMinutes((double)numOfMinutes), Cache.NoSlidingExpiration,
                 CacheItemPriority.High, null);
         }
 
@@ -144,7 +146,7 @@ namespace DCLSystem.Core.Caching.NetCache
         {
             Task.Run(
                 () =>
-                    WebCache.Add(key, value, null, DateTime.Now.AddMinutes((double) numOfMinutes),
+                    WebCache.Add(GetKeySuffix(key), value, null, DateTime.Now.AddMinutes((double)numOfMinutes),
                         Cache.NoSlidingExpiration, CacheItemPriority.High, null));
         }
 
@@ -160,7 +162,7 @@ namespace DCLSystem.Core.Caching.NetCache
         /// </remarks>
         public void Add(string key, object value, TimeSpan timeSpan)
         {
-            WebCache.Add(key, value, null, Cache.NoAbsoluteExpiration, timeSpan, CacheItemPriority.Normal, null);
+            WebCache.Add(GetKeySuffix(key), value, null, Cache.NoAbsoluteExpiration, timeSpan, CacheItemPriority.Normal, null);
         }
 
         /// <summary>
@@ -177,7 +179,7 @@ namespace DCLSystem.Core.Caching.NetCache
         {
             Task.Run(
                 () =>
-                    WebCache.Add(key, value, null, Cache.NoAbsoluteExpiration, timeSpan, CacheItemPriority.Normal, null));
+                    WebCache.Add(GetKeySuffix(key), value, null, Cache.NoAbsoluteExpiration, timeSpan, CacheItemPriority.Normal, null));
         }
 
         /// <summary>
@@ -193,7 +195,7 @@ namespace DCLSystem.Core.Caching.NetCache
         /// </remarks>
         public void Add(string key, object value, long numOfMinutes, bool flag)
         {
-            WebCache.Add(key, value, numOfMinutes, flag);
+            WebCache.Add(GetKeySuffix(key), value, numOfMinutes, flag);
         }
 
         /// <summary>
@@ -209,7 +211,7 @@ namespace DCLSystem.Core.Caching.NetCache
         /// </remarks>
         public void AddAsync(string key, object value, long numOfMinutes, bool flag)
         {
-            Task.Run(() => WebCache.Add(key, value, numOfMinutes, flag));
+            Task.Run(() => WebCache.Add(GetKeySuffix(key), value, numOfMinutes, flag));
         }
 
         /// <summary>
@@ -226,7 +228,7 @@ namespace DCLSystem.Core.Caching.NetCache
         /// </remarks>
         public void Add(string key, object value, long expires, bool flag, CacheItemPriority priority)
         {
-            WebCache.Add(key, value, expires, flag, priority);
+            WebCache.Add(GetKeySuffix(key), value, expires, flag, priority);
         }
 
         /// <summary>
@@ -266,7 +268,7 @@ namespace DCLSystem.Core.Caching.NetCache
         public void Add(string key, object value, CacheDependency dependencies, DateTime absoluteExpiration,
             TimeSpan slidingExpiration, CacheItemPriority priority, CacheItemRemovedCallback callback)
         {
-            WebCache.Add(key, value, dependencies, absoluteExpiration, slidingExpiration, priority, callback);
+            WebCache.Add(GetKeySuffix(key), value, dependencies, absoluteExpiration, slidingExpiration, priority, callback);
         }
 
         /// <summary>
@@ -281,7 +283,9 @@ namespace DCLSystem.Core.Caching.NetCache
         /// </remarks>
         public IDictionary<string, T> Get<T>(IEnumerable<string> keys)
         {
-            return WebCache.Get<T>(keys);
+            var enumerable = keys as string[] ?? keys.ToArray();
+            enumerable.ForEach(key => key = GetKeySuffix(key));
+            return WebCache.Get<T>(enumerable);
         }
 
         /// <summary>
@@ -296,7 +300,9 @@ namespace DCLSystem.Core.Caching.NetCache
         /// </remarks>
         public async Task<IDictionary<string, T>> GetAsync<T>(IEnumerable<string> keys)
         {
-            var result = await Task.Run(() => WebCache.Get<T>(keys));
+            var enumerable = keys as string[] ?? keys.ToArray();
+            enumerable.ForEach(key => key = GetKeySuffix(key));
+            var result = await Task.Run(() => WebCache.Get<T>(enumerable));
             return result;
         }
 
@@ -311,7 +317,7 @@ namespace DCLSystem.Core.Caching.NetCache
         /// </remarks>
         public object Get(string key)
         {
-            return WebCache.Get(key);
+            return WebCache.Get(GetKeySuffix(key));
         }
 
 
@@ -322,7 +328,7 @@ namespace DCLSystem.Core.Caching.NetCache
         /// <returns></returns>
         public async Task<object> GetAsync(string key)
         {
-            var result = await Task.Run(() => WebCache.Get(key));
+            var result = await Task.Run(() => WebCache.Get(GetKeySuffix(key)));
             return result;
         }
 
@@ -338,7 +344,7 @@ namespace DCLSystem.Core.Caching.NetCache
         /// </remarks>
         public T Get<T>(string key)
         {
-            return WebCache.Get<T>(key);
+            return WebCache.Get<T>(GetKeySuffix(key));
         }
 
         /// <summary>
@@ -353,7 +359,7 @@ namespace DCLSystem.Core.Caching.NetCache
         /// </remarks>
         public async Task<T> GetAsync<T>(string key)
         {
-            var result = await Task.Run(() => WebCache.Get<T>(key));
+            var result = await Task.Run(() => WebCache.Get<T>(GetKeySuffix(key)));
             return result;
         }
 
@@ -369,7 +375,7 @@ namespace DCLSystem.Core.Caching.NetCache
         /// </remarks>
         public bool GetCacheTryParse(string key, out object obj)
         {
-            return WebCache.GetCacheTryParse(key, out obj);
+            return WebCache.GetCacheTryParse(GetKeySuffix(key), out obj);
         }
 
         /// <summary>
@@ -395,7 +401,7 @@ namespace DCLSystem.Core.Caching.NetCache
         /// </remarks>
         public void RemoveAsync(string key)
         {
-            Task.Run(() => WebCache.Remove(key));
+            Task.Run(() => WebCache.Remove(GetKeySuffix(key)));
         }
 
         /// <summary>
@@ -458,6 +464,13 @@ namespace DCLSystem.Core.Caching.NetCache
             }
         }
 
+        #endregion
+
+        #region 私有变量
+        private string GetKeySuffix(string key)
+        {
+            return string.IsNullOrEmpty(KeySuffix) ? key : string.Format("_{0}_{1}", KeySuffix, key);
+        }
         #endregion
     }
 }

@@ -37,5 +37,3 @@ D:\新建文件夹\开源\DCLSystem.Core\DCLSystem.Core.Caching\obj\Debug\DCLSys
 D:\新建文件夹\开源\DCLSystem.Core\DCLSystem.Core.Caching\obj\Debug\DCLSystem.Core.Caching.dll
 D:\新建文件夹\开源\DCLSystem.Core\DCLSystem.Core.Caching\obj\Debug\DCLSystem.Core.Caching.pdb
 D:\新建文件夹\开源\DCLSystem.Core\DCLSystem.Core.Caching\obj\Debug\DCLSystem.Core.Caching.csprojResolveAssemblyReference.cache
-D:\新建文件夹\开源\DCLSystem.Core\DCLSystem.Core.Caching\bin\Debug\DCLSystem.Core.Caching.dll.CodeAnalysisLog.xml
-D:\新建文件夹\开源\DCLSystem.Core\DCLSystem.Core.Caching\bin\Debug\DCLSystem.Core.Caching.dll.lastcodeanalysissucceeded
