@@ -1,6 +1,5 @@
 # DCLSystem
-分布式缓存，实现一致性哈希算法，集成 couchbase,redis,webcache,membercache
-redis:
+分布式缓存，实现一致性哈希算法，集成 couchbase,redis,webcache,membercache:
 
      var o = CacheContainer.GetInstances<ICacheProvider>("ddlCache.Redis");
 
@@ -15,6 +14,8 @@ couchbase:
           o.Add("dddd","gggg",60);
 
           var b = o.Get<string>("dddd");
+          
+          value内容实现了GZIP压缩
 
 MemberCache:
 
