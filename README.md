@@ -48,7 +48,7 @@ WebCache:
            DCLSystem拦截器集成
 web.config
 
-
+SocketPool，ObjectPool 默认minSize： 1 maxSize：50，并发数提高，请配置maxSize
  <configSections>
     <section name="cachingProvider" type="DCLSystem.Core.Caching.Configurations.CacheWrapperSection, DCLSystem.Core.Caching" requirePermission="false" />
   </configSections>
