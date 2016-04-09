@@ -63,5 +63,16 @@ namespace DCLSystem.Core.Caching.RedisCache
             get; set;
         }
 
+        public int MaxSize
+        {
+            get; set;
+        }
+
+        public int MinSize
+        {
+            get;
+            set;
+        }
+
     }
 }

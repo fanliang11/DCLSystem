@@ -5,6 +5,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Couchbase;
 using Couchbase.Configuration;
@@ -23,16 +24,14 @@ namespace DCLSystem.Core.Caching.CouchBaseCache
     public class CouchBaseProvider : ICacheProvider
     {
         #region 字段
-
         private static readonly ConcurrentDictionary<string, CouchbaseClient> Clients =
-            new ConcurrentDictionary<string, CouchbaseClient>();
+      new ConcurrentDictionary<string, CouchbaseClient>();
 
         private readonly Lazy<RedisContext> _context;
         private Lazy<long> _defaultExpireTime;
         private const double ExpireTime = 60D;
         private string _keySuffix;
         private Lazy<int> _connectTimeout;
-
         #endregion
 
         #region 构造函数
@@ -265,11 +264,11 @@ namespace DCLSystem.Core.Caching.CouchBaseCache
                 Host = node.Host,
                 BucketPassword = node.Password,
                 BucketName = node.UserName,
-                Port = int.Parse(node.Port)
+                Port = int.Parse(node.Port),
+                MaxSize = int.Parse(node.MaxSize),
+                MinSize = int.Parse(node.MinSize)
             });
-
-            return couchbase.Get(GetKeySuffix(key));
-
+                return couchbase.Get(GetKeySuffix(key));
         }
 
         /// <summary>
@@ -295,19 +294,20 @@ namespace DCLSystem.Core.Caching.CouchBaseCache
         /// </remarks>
         public T Get<T>(string key)
         {
-            object obj2 = this.Get(key);
-            if (obj2 == null)
+            var node = GetRedisNode(key);
+            var couchbase = GetCouchbaseClient(new CouchBaseEndpoint()
             {
-                return default(T);
-            }
-            if (obj2 is Stream)
-            {
-                return Serializer.Deserialize<T>(obj2 as Stream);
-            }
-            using (Stream stream = this.ToStream(obj2 as byte[]))
-            {
-                return Serializer.Deserialize<T>(stream);
-            }
+                Db = node.Db,
+                Host = node.Host,
+                BucketPassword = node.Password,
+                BucketName = node.UserName,
+                Port = int.Parse(node.Port),
+                MaxSize = int.Parse(node.MaxSize),
+                MinSize = int.Parse(node.MinSize)
+            });
+
+            return couchbase.Get<T>(GetKeySuffix(key));
+           
         }
 
         /// <summary>
@@ -353,7 +353,9 @@ namespace DCLSystem.Core.Caching.CouchBaseCache
                 Host = node.Host,
                 BucketPassword = node.Password,
                 BucketName = node.UserName,
-                Port = int.Parse(node.Port)
+                Port = int.Parse(node.Port),
+                MaxSize = int.Parse(node.MaxSize),
+                MinSize = int.Parse(node.MinSize)
             });
             couchbase.Remove(GetKeySuffix(key));
         }
@@ -381,18 +383,22 @@ namespace DCLSystem.Core.Caching.CouchBaseCache
                 Host = node.Host,
                 BucketPassword = node.Password,
                 BucketName = node.UserName,
-                Port = int.Parse(node.Port)
+                Port = int.Parse(node.Port),
+                MaxSize = int.Parse(node.MaxSize),
+                MinSize = int.Parse(node.MinSize)
             });
-            var keySuffix = GetKeySuffix(key);
-            if (numOfMinutes < 0L)
-            {
-                result = couchBase.ExecuteStore(StoreMode.Set, keySuffix, this.GetBytes(value));
-            }
-            else
-            {
-                var validFor = new TimeSpan(0, (int) numOfMinutes, 0);
-                result = couchBase.ExecuteStore(StoreMode.Set, keySuffix, this.GetBytes(value), validFor);
-            }
+           
+                var keySuffix = GetKeySuffix(key);
+                if (numOfMinutes < 0L)
+                {
+                    result = couchBase.ExecuteStore(StoreMode.Set, keySuffix, value);
+                }
+                else
+                {
+                    var validFor = new TimeSpan(0, (int) numOfMinutes, 0);
+                    result = couchBase.ExecuteStore(StoreMode.Set, keySuffix, value, validFor);
+                }
+            
             if (result.Success)
             {
                 return true;
@@ -445,43 +451,35 @@ namespace DCLSystem.Core.Caching.CouchBaseCache
 
         private CouchbaseClient GetCouchbaseClient(CouchBaseEndpoint info)
         {
-            var key = info.SerializeToString();
-            if (!Clients.ContainsKey(key))
+            lock (Clients)
             {
-                var clientConfiguration = new CouchbaseClientConfiguration();
-
-                var url = new Uri(string.Format("http://{0}:{1}/{2}", info.Host, info.Port, info.Db));
-                clientConfiguration.Bucket = info.BucketName;
-                clientConfiguration.BucketPassword = info.BucketPassword;
-                clientConfiguration.Urls.Add(url);
-                clientConfiguration.HttpRequestTimeout = TimeSpan.FromSeconds(ConnectTimeout);
-                var couchbaseClient = new CouchbaseClient(clientConfiguration);
-                Clients.GetOrAdd(key, couchbaseClient);
-                return couchbaseClient;
-            }
-            else
-            {
-                return Clients[key];
-            }
-        }
-
-        private Stream ToStream(byte[] bytes)
-        {
-            Stream stream4;
-            using (var stream = new MemoryStream(bytes))
-            {
-                stream.Flush();
-                stream.Position = 0L;
-                var destination = new MemoryStream();
-                using (var stream3 = new GZipStream(stream, CompressionMode.Decompress))
+                try
                 {
-                    stream3.Flush();
-                    stream3.CopyTo(destination);
-                    destination.Position = 0L;
-                    stream4 = destination;
+                    var key = string.Format("{0}{1}{2}{3}{4}", info.Host, info.Port, info.BucketName, info.BucketPassword, info.Db);
+                    if (!Clients.ContainsKey(key))
+                    {
+                        var clientConfiguration = new CouchbaseClientConfiguration();
+                        var url = new Uri(string.Format("http://{0}:{1}/{2}", info.Host, info.Port, info.Db));
+                        clientConfiguration.Bucket = info.BucketName;
+                        clientConfiguration.BucketPassword = info.BucketPassword;
+                        clientConfiguration.Urls.Add(url);
+                        clientConfiguration.HttpRequestTimeout = TimeSpan.FromSeconds(ConnectTimeout);
+                        clientConfiguration.SocketPool.MaxPoolSize = info.MaxSize;
+                        clientConfiguration.SocketPool.MinPoolSize = info.MinSize;
+                        var couchbaseClient = new CouchbaseClient(clientConfiguration);
+                        Clients.GetOrAdd(key, couchbaseClient);
+                        return couchbaseClient;
+                    }
+                    else
+                    {
+                        return Clients[key];
+                    }
+                }
+                catch (Exception)
+                {
+                    return null;
                 }
             }
-            return stream4;
         }
 
         private byte[] GetBytes(object o)

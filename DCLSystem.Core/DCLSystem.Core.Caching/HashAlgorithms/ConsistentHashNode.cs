@@ -71,5 +71,37 @@ namespace DCLSystem.Core.Caching.HashAlgorithms
         {
             get; set;
         }
+
+        private string _maxSize = "50";
+        public string MaxSize
+        {
+            get
+            {
+                return _maxSize;
+            }
+            set
+            {
+                if (!string.IsNullOrEmpty(value))
+                {
+                    _maxSize = value;
+                }
+            }
+        }
+
+        private string _minSize = "1";
+        public string MinSize
+        {
+            get
+            {
+                return _minSize;
+            }
+            set
+            {
+                if (!string.IsNullOrEmpty(value))
+                {
+                    _minSize = value;
+                }
+            }
+        }
     }
 }

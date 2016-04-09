@@ -94,7 +94,9 @@
     <Compile Include="IdentifyCacheAttribute.cs" />
     <Compile Include="NetCache\WebCacheProvider.cs" />
     <Compile Include="NetCache\WebCache.cs" />
+    <Compile Include="ObjectPool.cs" />
     <Compile Include="RedisCache\RedisEndpoint.cs" />
+    <Compile Include="Utilities\CacheException.cs" />
     <Compile Include="Utilities\DebugCheck.cs" />
     <Compile Include="DependencyResolution\DependencyResolverExtensions.cs" />
     <Compile Include="DependencyResolution\IDependencyResolver.cs" />
@@ -113,6 +115,9 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>CachingResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram3.cd" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

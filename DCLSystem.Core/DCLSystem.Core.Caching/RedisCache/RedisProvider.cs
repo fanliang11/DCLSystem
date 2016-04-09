@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Configuration.Provider;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading.Tasks;
 using DCLSystem.Core.Caching.HashAlgorithms;
+using DCLSystem.Core.Caching.Utilities;
 using ServiceStack.Redis;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -17,21 +19,21 @@ namespace DCLSystem.Core.Caching.RedisCache
     public class RedisProvider : ICacheProvider
     {
         #region 字段
-        private static readonly ConcurrentDictionary<string, IRedisClient> Clients =
-         new ConcurrentDictionary<string, IRedisClient>();
         private readonly Lazy<RedisContext> _context;
         private Lazy<long> _defaultExpireTime;
         private const double ExpireTime = 60D;
         private string _keySuffix;
         private Lazy<int>  _connectTimeout;
+        private static  readonly ConcurrentDictionary<string,ObjectPool<IRedisClient>> _pool=new ConcurrentDictionary<string, ObjectPool<IRedisClient>>();
         #endregion
 
         #region 构造函数
+
         public RedisProvider(string appName)
         {
-            _context =new Lazy<RedisContext>(()=> CacheContainer.GetInstances<RedisContext>(appName));
+            _context = new Lazy<RedisContext>(() => CacheContainer.GetInstances<RedisContext>(appName));
             _keySuffix = appName;
-            _defaultExpireTime =new Lazy<long>(()=> long.Parse( _context.Value._defaultExpireTime));
+            _defaultExpireTime = new Lazy<long>(() => long.Parse(_context.Value._defaultExpireTime));
             _connectTimeout = new Lazy<int>(() => int.Parse(_context.Value._connectTimeout));
         }
 
@@ -53,7 +55,7 @@ namespace DCLSystem.Core.Caching.RedisCache
         /// </remarks>
         public void Add(string key, object value)
         {
-             this.Add(key, value, TimeSpan.FromSeconds(ExpireTime));
+            this.Add(key, value, TimeSpan.FromSeconds(ExpireTime));
         }
 
         /// <summary>
@@ -65,19 +67,9 @@ namespace DCLSystem.Core.Caching.RedisCache
         /// 	<para>创建：范亮</para>
         /// 	<para>日期：2016/4/2</para>
         /// </remarks>
-        public  void AddAsync(string key, object value)
+        public void AddAsync(string key, object value)
         {
-            var node = GetRedisNode(key);
-            using (var redis = GetRedisClient(new RedisEndpoint()
-            {
-                DbIndex = long.Parse(node.Db),
-                Host = node.Host,
-                Password = node.Password,
-                Port = int.Parse(node.Port)
-            }))
-            {
-                Task.Run(() => redis != null && redis.Add(GetKeySuffix(key), value, TimeSpan.FromSeconds(ExpireTime)));
-            }
+            this.AddTaskAsync(key, value, TimeSpan.FromSeconds(ExpireTime));
         }
 
         /// <summary>
@@ -107,17 +99,7 @@ namespace DCLSystem.Core.Caching.RedisCache
         /// </remarks>
         public void AddAsync(string key, object value, bool defaultExpire)
         {
-              var node = GetRedisNode(key);
-            using (var redis = GetRedisClient(new RedisEndpoint()
-            {
-                DbIndex = long.Parse(node.Db),
-                Host = node.Host,
-                Password = node.Password,
-                Port = int.Parse(node.Port)
-            },true))
-            {
-                Task.Run(() => redis != null && redis.Add(GetKeySuffix(key), value, TimeSpan.FromSeconds(defaultExpire ? DefaultExpireTime : ExpireTime)));
-            }
+            this.AddTaskAsync(key, value, TimeSpan.FromSeconds(defaultExpire ? DefaultExpireTime : ExpireTime));
         }
 
         /// <summary>
@@ -148,18 +130,9 @@ namespace DCLSystem.Core.Caching.RedisCache
         /// </remarks>
         public void AddAsync(string key, object value, long numOfMinutes)
         {
-                 var node = GetRedisNode(key);
-            using (var redis = GetRedisClient(new RedisEndpoint()
-            {
-                DbIndex = long.Parse(node.Db),
-                Host = node.Host,
-                Password = node.Password,
-                Port = int.Parse(node.Port)
-            }, true))
-            {
-                Task.Run(() => redis != null && redis.Add(GetKeySuffix(key), value, TimeSpan.FromSeconds(numOfMinutes)));
-            }
+            this.AddTaskAsync(key, value, TimeSpan.FromSeconds(numOfMinutes));
         }
+
 
         /// <summary>
         /// 添加k/v值
@@ -176,10 +149,12 @@ namespace DCLSystem.Core.Caching.RedisCache
             var node = GetRedisNode(key);
             var redis = GetRedisClient(new RedisEndpoint()
             {
-                DbIndex = long.Parse(node.Db),
+                DbIndex = long.Parse(string.IsNullOrEmpty(node.Db) ? "0" : node.Db),
                 Host = node.Host,
                 Password = node.Password,
-                Port = int.Parse(node.Port)
+                Port = int.Parse(node.Port),
+                MinSize = int.Parse(string.IsNullOrEmpty(node.Db) ? "0" : node.MinSize),
+                MaxSize = int.Parse(string.IsNullOrEmpty(node.Db) ? "0" : node.MaxSize),
             });
             redis.ConnectTimeout = ConnectTimeout;
             redis.Add(GetKeySuffix(key), value, timeSpan);
@@ -197,17 +172,7 @@ namespace DCLSystem.Core.Caching.RedisCache
         /// </remarks>
         public void AddAsync(string key, object value, TimeSpan timeSpan)
         {
-                       var node = GetRedisNode(key);
-            using (var redis = GetRedisClient(new RedisEndpoint()
-            {
-                DbIndex = long.Parse(node.Db),
-                Host = node.Host,
-                Password = node.Password,
-                Port = int.Parse(node.Port)
-            }, true))
-            {
-                Task.Run(() => redis != null && redis.Add(GetKeySuffix(key), value, timeSpan));
-            }
+            this.AddTaskAsync(key, value, timeSpan);
         }
 
         /// <summary>
@@ -239,17 +204,7 @@ namespace DCLSystem.Core.Caching.RedisCache
         /// </remarks>
         public void AddAsync(string key, object value, long numOfMinutes, bool flag)
         {
-            var node = GetRedisNode(key);
-            using (var redis = GetRedisClient(new RedisEndpoint()
-            {
-                DbIndex = long.Parse(node.Db),
-                Host = node.Host,
-                Password = node.Password,
-                Port = int.Parse(node.Port)
-            }, true))
-            {
-                Task.Run(() => redis != null && redis.Add(GetKeySuffix(key), value, TimeSpan.FromSeconds(numOfMinutes)));
-            }
+            this.AddTaskAsync(key, value, TimeSpan.FromSeconds(numOfMinutes));
         }
 
         /// <summary>
@@ -294,7 +249,9 @@ namespace DCLSystem.Core.Caching.RedisCache
                     DbIndex = long.Parse(node.Db),
                     Host = node.Host,
                     Password = node.Password,
-                    Port = int.Parse(node.Port)
+                    Port = int.Parse(node.Port),
+                    MinSize = int.Parse(node.MinSize),
+                    MaxSize = int.Parse(node.MaxSize),
                 }, true))
                 {
                     this.Add(key, await Task.Run(() => redis.Get<T>(GetKeySuffix(key))));
@@ -325,18 +282,8 @@ namespace DCLSystem.Core.Caching.RedisCache
         /// <returns></returns>
         public async Task<object> GetAsync(string key)
         {
-                var node = GetRedisNode(key);
-            using (var redis = GetRedisClient(new RedisEndpoint()
-            {
-                DbIndex = long.Parse(node.Db),
-                Host = node.Host,
-                Password = node.Password,
-                Port = int.Parse(node.Port)
-            }, true))
-            {
-                var result = await Task.Run(() => redis.Get<object>(GetKeySuffix(key)));
-                return result;
-            }
+            var result = await this.GetTaskAsync<object>(key);
+            return result;
         }
 
         /// <summary>
@@ -358,12 +305,16 @@ namespace DCLSystem.Core.Caching.RedisCache
                 DbIndex = long.Parse(node.Db),
                 Host = node.Host,
                 Password = node.Password,
-                Port = int.Parse(node.Port)
+                Port = int.Parse(node.Port),
+                MinSize = int.Parse(node.MinSize),
+                MaxSize = int.Parse(node.MaxSize),
             });
             redis.ConnectTimeout = ConnectTimeout;
             result = redis.Get<T>(GetKeySuffix(key));
             return result;
         }
+
+       
 
         /// <summary>
         /// 根据KEY异步获取指定的类型对象
@@ -374,17 +325,19 @@ namespace DCLSystem.Core.Caching.RedisCache
         public async Task<T> GetAsync<T>(string key)
         {
             var node = GetRedisNode(key);
-            using (var redis = GetRedisClient(new RedisEndpoint()
+            var redis = GetRedisClient(new RedisEndpoint()
             {
                 DbIndex = long.Parse(node.Db),
                 Host = node.Host,
                 Password = node.Password,
-                Port = int.Parse(node.Port)
-            }, true))
-            {
-                var result = await Task.Run(() => redis.Get<T>(GetKeySuffix(key)));
+                Port = int.Parse(node.Port),
+                MinSize = int.Parse(node.MinSize),
+                MaxSize = int.Parse(node.MaxSize),
+            });
+
+            var result = await Task.Run(() => redis.Get<T>(GetKeySuffix(key)));
                 return result;
-            }
+           
         }
 
         /// <summary>
@@ -420,7 +373,9 @@ namespace DCLSystem.Core.Caching.RedisCache
                 DbIndex = long.Parse(node.Db),
                 Host = node.Host,
                 Password = node.Password,
-                Port = int.Parse(node.Port)
+                Port = int.Parse(node.Port),
+                MinSize = int.Parse(node.MinSize),
+                MaxSize = int.Parse(node.MaxSize),
             });
             redis.ConnectTimeout = ConnectTimeout;
             redis.Remove(GetKeySuffix(key));
@@ -437,17 +392,7 @@ namespace DCLSystem.Core.Caching.RedisCache
         /// </remarks>
         public void RemoveAsync(string key)
         {
-            var node = GetRedisNode(key);
-            using (var redis = GetRedisClient(new RedisEndpoint()
-            {
-                DbIndex = long.Parse(node.Db),
-                Host = node.Host,
-                Password = node.Password,
-                Port = int.Parse(node.Port)
-            }, true))
-            {
-                Task.Run(() => redis.Remove(GetKeySuffix(key)));
-            }
+            this.RemoveTaskAsync(key);
         }
 
         public long DefaultExpireTime
@@ -490,24 +435,31 @@ namespace DCLSystem.Core.Caching.RedisCache
         #endregion
 
         #region 私有方法
-        private static IRedisClient GetRedisClient(RedisEndpoint info,bool flag =false)
-        {
-            var key = info.SerializeToString();
-            if (!Clients.ContainsKey(key) || flag==true)
-            {
-                var redisClient = new RedisClient(info.Host, info.Port, info.Password, info.DbIndex);
-                Clients.GetOrAdd(key, redisClient);
-                return redisClient;
-            }
-            else
-            {
-                return Clients[key];
-            }
-        }
 
-        private string GetKeySuffix(string key)
+        private static IRedisClient GetRedisClient(RedisEndpoint info, bool flag = false)
         {
-            return string.IsNullOrEmpty(KeySuffix) ? key : string.Format("_{0}_{1}", KeySuffix, key);
+            try
+            {
+                var key = string.Format("{0}{1}{2}{3}", info.Host, info.Port, info.Password, info.DbIndex);
+                if (!_pool.ContainsKey(key))
+                {
+                    var objectPool = new ObjectPool<IRedisClient>(() =>
+                    {
+                        var redisClient = new RedisClient(info.Host, info.Port, info.Password, info.DbIndex);
+                        return redisClient;
+                    }, info.MinSize, info.MaxSize);
+                    _pool.GetOrAdd(key, objectPool);
+                    return objectPool.GetObject();
+                }
+                else
+                {
+                    return _pool[key].GetObject();
+                }
+            }
+            catch (Exception e)
+            {
+                throw new CacheException(e.Message);
+            }
         }
 
         private ConsistentHashNode GetRedisNode(string item)
@@ -515,11 +467,30 @@ namespace DCLSystem.Core.Caching.RedisCache
             ConsistentHash<ConsistentHashNode> hash;
             _context.Value.dicHash.TryGetValue(CacheTargetType.Redis.ToString(), out hash);
             return hash != null ? hash.GetItemNode(item) : default(ConsistentHashNode);
+        }   
+
+        private Task<T> GetTaskAsync<T>(string key)
+        {
+            return Task.Run(() => this.Get<T>(key));
+        }
+
+        private void AddTaskAsync(string key, object value, TimeSpan timeSpan)
+        {
+            Task.Run(() => this.Add(key, value, timeSpan));
+        }
+
+        private void RemoveTaskAsync(string key)
+        {
+            Task.Run(() => this.Remove(key));
+        }
+
+        private string GetKeySuffix(string key)
+        {
+            return string.IsNullOrEmpty(KeySuffix) ? key : string.Format("_{0}_{1}", KeySuffix, key);
         }
 
         #endregion
 
-
-        
+     
     }
 }

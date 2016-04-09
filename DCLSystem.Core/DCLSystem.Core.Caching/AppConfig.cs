@@ -111,6 +111,7 @@ namespace DCLSystem.Core.Caching
                                 .FirstOrDefault(p => p.Any());
                         var type = setting.GetFactoryType();
 
+                          if(ServiceResolver.Current.GetService(type,setting.IdName)==null)
                         ServiceResolver.Current.Register(setting.IdName, Activator.CreateInstance(type, args));
                         if (maps == null) continue;
                         var mapCollections = maps as MapCollection[] ?? maps.ToArray();

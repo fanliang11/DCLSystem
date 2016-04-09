@@ -38,5 +38,13 @@ namespace DCLSystem.Core.Caching.Utilities
 
             return value;
         }
+
+        public static void CheckCondition(Func<bool> condition, string parameterName)
+        {
+            if (condition.Invoke())
+            {
+                throw new ArgumentException(string.Format(CachingResources.ArgumentIsNullOrWhitespace, parameterName));
+            }
+        }
     }
 }

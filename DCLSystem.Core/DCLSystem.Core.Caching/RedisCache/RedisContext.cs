@@ -75,6 +75,16 @@ namespace DCLSystem.Core.Caching.RedisCache
         /// </remarks>
         internal ConcurrentDictionary<string, ConsistentHash<ConsistentHashNode>> dicHash;
 
+        /// <summary>
+        /// 对象池上限
+        /// </summary>
+        internal string _maxSize;
+
+        /// <summary>
+        /// 对象池下限
+        /// </summary>
+        internal string _minSize;
+
         #region 构造函数
         /// <summary>
         /// redis数据上下文
@@ -170,7 +180,7 @@ namespace DCLSystem.Core.Caching.RedisCache
                     var username = account != null && account.Length > 1 ? account[0] : null;
                     var password = server.Length > 1 ? account[account.Length - 1] : this._password;
                     if (endpoints.Length <= 1) return;
-                    if (dbs.Length >= 1)
+                    if (dbs.Length > 1)
                     {
                         db = dbs[dbs.Length - 1];
                     }
@@ -181,6 +191,8 @@ namespace DCLSystem.Core.Caching.RedisCache
                         Port = endpoints[1],
                         UserName = username,
                         Password = password,
+                        MaxSize = this._maxSize,
+                        MinSize = this._minSize,
                         Db = db.ToString(CultureInfo.InvariantCulture)
                     });
                     dicHash.GetOrAdd(targetType.ToString(), hash);
