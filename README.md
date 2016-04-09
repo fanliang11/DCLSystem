@@ -69,6 +69,8 @@ web.config
         </property>
         <property name="defaultExpireTime" value="120"/>
        <property name="connectTimeout" value="120"/>
+       <property name="minSize" value="1"/>
+      <property name="maxSize" value="200"/>
       </binding>
          <binding id="testCache" class="DCLSystem.Core.Caching.RedisCache.RedisContext,DCLSystem.Core.Caching">
         <property name="appRuleFile" ref="rule"/>
@@ -82,6 +84,8 @@ web.config
         </property>
         <property name="defaultExpireTime" value="120"/>
        <property name="connectTimeout" value="120"/>
+       <property name="minSize" value="1"/>
+      <property name="maxSize" value="50"/>
       </binding>
     </bindings>
   </cachingProvider>
