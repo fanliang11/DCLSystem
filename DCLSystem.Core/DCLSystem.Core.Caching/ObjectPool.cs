@@ -61,7 +61,6 @@ namespace DCLSystem.Core.Caching
         /// <summary>
         /// 从对象池中取一个对象出来, 执行完成以后会自动将对象放回池中
         /// </summary>
-        /// <param name="action">一个可用的对象</param>
         public T GetObject()
         { 
             var t = default(T);
