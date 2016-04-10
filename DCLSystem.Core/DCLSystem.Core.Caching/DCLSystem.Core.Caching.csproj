@@ -85,6 +85,7 @@
     <Compile Include="Configurations\MapCollection.cs" />
     <Compile Include="Configurations\ParameterElement.cs" />
     <Compile Include="Configurations\PropertyElement.cs" />
+    <Compile Include="CouchBaseCache\CouchBaseCacheClient.cs" />
     <Compile Include="CouchBaseCache\CouchBaseEndpoint.cs" />
     <Compile Include="CouchBaseCache\CouchBaseProvider.cs" />
     <Compile Include="HashAlgorithms\ConsistentHash.cs" />
@@ -92,10 +93,15 @@
     <Compile Include="HashAlgorithms\HashAlgorithm.cs" />
     <Compile Include="HashAlgorithms\IHashAlgorithm.cs" />
     <Compile Include="IdentifyCacheAttribute.cs" />
+    <Compile Include="Interfaces\CacheEndpoint.cs" />
+    <Compile Include="Interfaces\ICacheClient.cs" />
     <Compile Include="NetCache\WebCacheProvider.cs" />
     <Compile Include="NetCache\WebCache.cs" />
     <Compile Include="ObjectPool.cs" />
+    <Compile Include="RedisCache\RedisCacheClient.cs" />
     <Compile Include="RedisCache\RedisEndpoint.cs" />
+    <Compile Include="Transactions\ITransactionScope.cs" />
+    <Compile Include="Transactions\RedisTransactionScope.cs" />
     <Compile Include="Utilities\CacheException.cs" />
     <Compile Include="Utilities\DebugCheck.cs" />
     <Compile Include="DependencyResolution\DependencyResolverExtensions.cs" />

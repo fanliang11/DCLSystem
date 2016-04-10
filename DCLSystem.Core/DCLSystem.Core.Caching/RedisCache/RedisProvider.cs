@@ -7,6 +7,7 @@ using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading.Tasks;
 using DCLSystem.Core.Caching.HashAlgorithms;
+using DCLSystem.Core.Caching.Interfaces;
 using DCLSystem.Core.Caching.Utilities;
 using ServiceStack.Redis;
 using System.Collections.Concurrent;
@@ -252,7 +253,7 @@ namespace DCLSystem.Core.Caching.RedisCache
                     Port = int.Parse(node.Port),
                     MinSize = int.Parse(node.MinSize),
                     MaxSize = int.Parse(node.MaxSize),
-                }, true))
+                }))
                 {
                     this.Add(key, await Task.Run(() => redis.Get<T>(GetKeySuffix(key))));
                 }
@@ -436,30 +437,11 @@ namespace DCLSystem.Core.Caching.RedisCache
 
         #region 私有方法
 
-        private static IRedisClient GetRedisClient(RedisEndpoint info, bool flag = false)
+        private IRedisClient GetRedisClient(CacheEndpoint info)
         {
-            try
-            {
-                var key = string.Format("{0}{1}{2}{3}", info.Host, info.Port, info.Password, info.DbIndex);
-                if (!_pool.ContainsKey(key))
-                {
-                    var objectPool = new ObjectPool<IRedisClient>(() =>
-                    {
-                        var redisClient = new RedisClient(info.Host, info.Port, info.Password, info.DbIndex);
-                        return redisClient;
-                    }, info.MinSize, info.MaxSize);
-                    _pool.GetOrAdd(key, objectPool);
-                    return objectPool.GetObject();
-                }
-                else
-                {
-                    return _pool[key].GetObject();
-                }
-            }
-            catch (Exception e)
-            {
-                throw new CacheException(e.Message);
-            }
+            return
+                CacheContainer.GetInstances<ICacheClient<IRedisClient>>(CacheTargetType.Redis.ToString())
+                    .GetClient(info, ConnectTimeout);
         }
 
         private ConsistentHashNode GetRedisNode(string item)

@@ -51,7 +51,9 @@ namespace DCLSystem.Core.Caching
         {
             ServiceResolver.Current.Register(null, Activator.CreateInstance(typeof (HashAlgorithm), new object[] {}));
             _cacheWrapperSetting = cacheWrapperSetting ?? new CacheWrapperSection();
-            RegisterInstance();
+            RegisterConfigInstance();
+            RegisterLocalInstance("ICacheClient`1");
+            RegisterLocalInstance("ITransactionScope");
             InitSettingMethod();
             var bings = _cacheWrapperSetting
                 .Bindings
@@ -90,7 +92,19 @@ namespace DCLSystem.Core.Caching
             return settings;
         }
 
-        private void RegisterInstance()
+        private void RegisterLocalInstance(string typeName)
+        {
+            var types = this.GetType().Assembly.GetTypes().Where(p => p.GetInterface(typeName) != null);
+            foreach (var t in types)
+            {
+                  var attribute = t.GetCustomAttribute<IdentifyCacheAttribute>();
+                    ServiceResolver.Current.Register(attribute.Name.ToString(),
+                        Activator.CreateInstance(t));
+            }
+
+        }
+
+        private void RegisterConfigInstance()
         {
             var bingingSettings = _cacheWrapperSetting.Bindings.OfType<BindingCollection>();
 

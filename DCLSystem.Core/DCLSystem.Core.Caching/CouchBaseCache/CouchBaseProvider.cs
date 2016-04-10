@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Couchbase;
 using Couchbase.Configuration;
 using DCLSystem.Core.Caching.HashAlgorithms;
+using DCLSystem.Core.Caching.Interfaces;
 using DCLSystem.Core.Caching.RedisCache;
 using Enyim.Caching.Memcached;
 using Enyim.Caching.Memcached.Results;
@@ -451,35 +452,9 @@ namespace DCLSystem.Core.Caching.CouchBaseCache
 
         private CouchbaseClient GetCouchbaseClient(CouchBaseEndpoint info)
         {
-            lock (Clients)
-            {
-                try
-                {
-                    var key = string.Format("{0}{1}{2}{3}{4}", info.Host, info.Port, info.BucketName, info.BucketPassword, info.Db);
-                    if (!Clients.ContainsKey(key))
-                    {
-                        var clientConfiguration = new CouchbaseClientConfiguration();
-                        var url = new Uri(string.Format("http://{0}:{1}/{2}", info.Host, info.Port, info.Db));
-                        clientConfiguration.Bucket = info.BucketName;
-                        clientConfiguration.BucketPassword = info.BucketPassword;
-                        clientConfiguration.Urls.Add(url);
-                        clientConfiguration.HttpRequestTimeout = TimeSpan.FromSeconds(ConnectTimeout);
-                        clientConfiguration.SocketPool.MaxPoolSize = info.MaxSize;
-                        clientConfiguration.SocketPool.MinPoolSize = info.MinSize;
-                        var couchbaseClient = new CouchbaseClient(clientConfiguration);
-                        Clients.GetOrAdd(key, couchbaseClient);
-                        return couchbaseClient;
-                    }
-                    else
-                    {
-                        return Clients[key];
-                    }
-                }
-                catch (Exception)
-                {
-                    return null;
-                }
-            }
+            return
+                CacheContainer.GetInstances<ICacheClient<CouchbaseClient>>(CacheTargetType.CouchBase.ToString())
+                    .GetClient(info, ConnectTimeout);
         }
 
         private byte[] GetBytes(object o)

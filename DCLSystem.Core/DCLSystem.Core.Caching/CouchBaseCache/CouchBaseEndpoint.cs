@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DCLSystem.Core.Caching.Interfaces;
 
 namespace DCLSystem.Core.Caching.CouchBaseCache
 {
-   public class CouchBaseEndpoint
+    public class CouchBaseEndpoint : CacheEndpoint
     {
         /// <summary>
         /// 主机
@@ -15,7 +16,7 @@ namespace DCLSystem.Core.Caching.CouchBaseCache
         /// 	<para>创建：范亮</para>
         /// 	<para>日期：2016/4/2</para>
         /// </remarks>
-        public string Host
+        public  string Host
         {
             get;
             set;

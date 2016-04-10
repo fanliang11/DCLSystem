@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DCLSystem.Core.Caching.Interfaces;
 
 namespace DCLSystem.Core.Caching.RedisCache
 {
@@ -13,7 +14,7 @@ namespace DCLSystem.Core.Caching.RedisCache
     /// 	<para>创建：范亮</para>
     /// 	<para>日期：2016/4/2</para>
     /// </remarks>
-    public class RedisEndpoint
+    public class RedisEndpoint : CacheEndpoint
     {
         /// <summary>
         /// 主机
