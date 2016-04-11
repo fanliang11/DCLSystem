@@ -1,5 +1,5 @@
 # DCLSystem
-分布式缓存，实现一致性哈希算法，集成 couchbase,redis,webcache,membercache,支持分布事务，以解决一致性问题:
+分布式缓存，实现一致性哈希算法，集成 couchbase,redis,webcache,membercache
 
      var o = CacheContainer.GetInstances<ICacheProvider>("ddlCache.Redis");
 
